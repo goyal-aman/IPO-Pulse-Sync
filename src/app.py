@@ -3,11 +3,10 @@ import subprocess
 import base64
 import requests
 from datetime import datetime
-
+from flask import Flask
 # ARGS
-TOKEN = os.environ['TOKEN'] 
-# IPO_PULSE_API_BASE_URL = os.environ['IPO_PULSE_API_BASE_URL']
-
+GHTOKEN = os.environ['GHTOKEN'] 
+IPO_PULSE_PARSER_BASE_URL = os.environ["IPO_PULSE_PARSER_BASE_URL"] 
 
 # Constants
 GITHUB_API_URL = 'https://api.github.com'
@@ -41,7 +40,7 @@ def upload_file_to_github():
     url = f'{GITHUB_API_URL}/repos/{REPO}/contents/{GENERATED_FILE_NAME}'
 
     # Check if the file already exists
-    response = requests.get(url, headers={'Authorization': f'token {TOKEN}'})
+    response = requests.get(url, headers={'Authorization': f'token {GHTOKEN}'})
 
     if response.status_code == 200:
         # If the file exists, we need to update it
@@ -52,7 +51,7 @@ def upload_file_to_github():
             'sha': sha,
             'branch': BRANCH
         }
-        response = requests.put(url, json=data, headers={'Authorization': f'token {TOKEN}'})
+        response = requests.put(url, json=data, headers={'Authorization': f'token {GHTOKEN}'})
     else:
         # If the file does not exist, we can create it
         data = {
@@ -60,17 +59,58 @@ def upload_file_to_github():
             'content': encoded_content,
             'branch': BRANCH
         }
-        response = requests.put(url, json=data, headers={'Authorization': f'token {TOKEN}'})
+        response = requests.put(url, json=data, headers={'Authorization': f'token {GHTOKEN}'})
 
     if response.status_code in (200, 201):
         print('File uploaded successfully!')
     else:
         print(f'Error uploading file: {response.content}')
 
-if __name__ == '__main__':
-    # Run the command to generate the HTML file
-    # command_to_run = f'sudo docker run -e BASE_URL={IPO_PULSE_API_BASE_URL} -v $PWD:/app/generated amangoyal8110/ipo-pulse-parser:latest'  # Replace with your actual command
-    # run_command(command_to_run)
+def upload_file_to_github_v2(html_str):
+    """Upload the generated HTML file to the GitHub repository."""
+    # Encode the file content to Base64
+    encoded_content = base64.b64encode(html_str.encode('utf-8')).decode()
+
+    # API endpoint for creating/updating a file
+    url = f'{GITHUB_API_URL}/repos/{REPO}/contents/{GENERATED_FILE_NAME}'
+
+    # Check if the file already exists
+    response = requests.get(url, headers={'Authorization': f'token {GHTOKEN}'})
+
+    if response.status_code == 200:
+        # If the file exists, we need to update it
+        sha = response.json().get('sha')
+        data = {
+            'message': f"Update generated HTML file {datetime.now()}",
+            'content': encoded_content,
+            'sha': sha,
+            'branch': BRANCH
+        }
+        response = requests.put(url, json=data, headers={'Authorization': f'token {GHTOKEN}'})
+    else:
+        # If the file does not exist, we can create it
+        data = {
+            'message': 'Create generated HTML file',
+            'content': encoded_content,
+            'branch': BRANCH
+        }
+        response = requests.put(url, json=data, headers={'Authorization': f'token {GHTOKEN}'})
+
+    if response.status_code in (200, 201):
+        print('File uploaded successfully!')
+    else:
+        print(f'Error uploading file: {response.content}')
+    return "success"
+
     
-    # Upload the generated file to GitHub
-    upload_file_to_github()
+
+app = Flask(__name__)
+
+@app.route('/api/sync', methods=['GET'])
+def sync():
+    response = response = requests.get(IPO_PULSE_PARSER_BASE_URL+"/api/html")
+    return upload_file_to_github_v2(response.json().get('data'))
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5680)
+
