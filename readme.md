@@ -7,10 +7,10 @@ IPO-Pulse-Sync syncs html generated with the github repo.
 docker run --rm -p 5678:5678 amangoyal8110/ipo-pulse-api:latest
 
 # Step 2, generate index.html
-docker run -e BASE_URL=http://localhost:5678 -v $PWD:/app/generated amangoyal8110/ipo-pulse-parser:latest
+sudo docker run -p 5679:5679 -e IPO_PULSE_BASE_URL=http://localhost:5678 amangoyal8110/ipo-pulse-parser:9
 
-# Step 3, Sync with git repo, right now git repo is hard coded, this will be fixed in next versions
-sudo docker run -e TOKEN=<GITHUB_TOKEN> -v $PWD/index.html:/app/index.html amangoyal8110/ipo-pulse-sync:4
+# Step 3, run ipo-pulse-sync
+sudo docker run -e GHTOKEN=<GITHUB_TOKEN> -e IPO_PULSE_PARSER_BASE_URL=<IPO_PULSE_PARSER_BASE_URL> amangoyal8110/ipo-pulse-sync:6
 ```
 
 
