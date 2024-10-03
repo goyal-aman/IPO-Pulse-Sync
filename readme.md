@@ -10,7 +10,7 @@ docker run --rm -p 5678:5678 amangoyal8110/ipo-pulse-api:latest
 sudo docker run -p 5679:5679 -e IPO_PULSE_BASE_URL=http://localhost:5678 amangoyal8110/ipo-pulse-parser:9
 
 # Step 3, run ipo-pulse-sync
-sudo docker run -e GHTOKEN=<GITHUB_TOKEN> -e IPO_PULSE_PARSER_BASE_URL=<IPO_PULSE_PARSER_BASE_URL> amangoyal8110/ipo-pulse-sync:6
+sudo docker run -p 5680:5680 -e GHTOKEN=<GITHUB_TOKEN> -e IPO_PULSE_PARSER_BASE_URL=<IPO_PULSE_PARSER_BASE_URL> amangoyal8110/ipo-pulse-sync:6
 ```
 
 
